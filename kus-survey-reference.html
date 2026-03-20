@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KUS Segment Survey – Dev Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--neon:#39FF14;--neon-dim:#2bcc10;--neon-glow:rgba(57,255,20,0.15);--neon-glow-strong:rgba(57,255,20,0.3);--bg-deep:#0a0e0a;--bg-option:#1a1f1a;--bg-option-hover:#222822;--bg-option-selected:#1e2b1a;--border-subtle:rgba(57,255,20,0.08);--border-selected:rgba(57,255,20,0.4);--text-primary:#e8efe8;--text-secondary:#8a9a8a;--text-dim:#556355;--star-gold:#FFD700;--star-glow:rgba(255,215,0,0.3)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-deep);color:var(--text-primary);font-family:'Noto Sans KR',sans-serif;min-height:100vh;overflow-x:hidden}
+.grid-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background:linear-gradient(rgba(57,255,20,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(57,255,20,0.03) 1px,transparent 1px);background-size:60px 60px}
+.grid-bg::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 20%,rgba(57,255,20,0.06) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(57,255,20,0.04) 0%,transparent 50%);animation:ambientShift 20s ease-in-out infinite alternate}
+@keyframes ambientShift{0%{transform:translate(0,0)}100%{transform:translate(-5%,-3%)}}
+.topbar{position:fixed;top:0;left:0;right:0;height:48px;background:rgba(10,14,10,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:0 32px;z-index:100}
+.topbar-logo{font-family:'Orbitron',sans-serif;font-weight:700;font-size:14px;color:var(--neon);letter-spacing:3px;text-transform:uppercase}
+.lang-switch{font-family:'Rajdhani',sans-serif;font-size:13px;color:var(--text-secondary);cursor:pointer}
+.progress-container{position:fixed;top:48px;left:0;right:0;height:3px;background:rgba(57,255,20,0.08);z-index:99}
+.progress-bar{height:100%;background:var(--neon);box-shadow:0 0 12px var(--neon-glow-strong);transition:width .5s cubic-bezier(.4,0,.2,1);width:0%}
+.survey-wrapper{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding:80px 32px 60px}
+.question-section{display:none;animation:fadeSlideIn .4s ease-out}
+.question-section.active{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;min-height:calc(100vh - 140px);padding-top:40px}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.left-panel{position:sticky;top:120px}
+.decorative-slashes{font-family:'Orbitron',sans-serif;font-size:13px;color:var(--text-dim);letter-spacing:4px;margin-bottom:12px}
+.section-title{font-family:'Orbitron',sans-serif;font-weight:800;font-size:clamp(28px,4vw,42px);line-height:1.15;color:var(--neon);text-transform:uppercase;margin-bottom:20px;text-shadow:0 0 30px rgba(57,255,20,0.2)}
+.section-desc{font-size:14px;line-height:1.7;color:var(--text-secondary);margin-bottom:24px;max-width:400px}
+.skip-btn{display:inline-flex;padding:10px 20px;background:transparent;border:1px solid var(--text-dim);color:var(--text-dim);font-family:'Noto Sans KR',sans-serif;font-size:12px;cursor:pointer;transition:all .3s;line-height:1.4}
+.skip-btn:hover{border-color:var(--text-secondary);color:var(--text-secondary)}
+.right-panel{padding-top:8px}
+.q-number{font-family:'Orbitron',sans-serif;font-weight:700;font-size:16px;color:var(--neon);margin-bottom:8px;letter-spacing:1px}
+.q-text{font-size:17px;font-weight:500;margin-bottom:6px;line-height:1.5}
+.q-subtitle{font-size:12px;color:var(--text-secondary);margin-bottom:20px;line-height:1.5}
+.q-subtitle .star-hint{color:var(--star-gold)}
+.interaction-hint{background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.15);border-radius:6px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:12px;color:rgba(255,215,0,0.8)}
+.interaction-hint .hint-icon{font-size:16px;flex-shrink:0}
+.options-list{display:flex;flex-direction:column;gap:6px}
+.option-item{position:relative;display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-option);border:1px solid transparent;border-radius:4px;cursor:pointer;transition:all .2s;user-select:none}
+.option-item:hover{background:var(--bg-option-hover)}
+.option-item.selected{background:var(--bg-option-selected);border-color:var(--border-selected)}
+.option-item.selected .option-text{color:var(--neon)}
+.check-box{width:20px;height:20px;border:2px solid var(--text-dim);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.option-item.selected .check-box{border-color:var(--neon);background:var(--neon)}
+.check-box svg{width:12px;height:12px;opacity:0;transition:opacity .15s}
+.option-item.selected .check-box svg{opacity:1}
+.radio-circle{width:20px;height:20px;border:2px solid var(--text-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.option-item.selected .radio-circle{border-color:var(--neon)}
+.radio-circle::after{content:'';width:10px;height:10px;background:var(--neon);border-radius:50%;opacity:0;transition:opacity .15s}
+.option-item.selected .radio-circle::after{opacity:1}
+.option-text{font-size:14px;color:var(--text-primary);flex:1;line-height:1.4}
+.option-text .sub{display:block;font-size:11px;color:var(--text-dim);margin-top:2px}
+.star-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;opacity:0;pointer-events:none;transition:all .2s;border-radius:50%}
+.option-item.selected .star-btn{opacity:.4;pointer-events:auto}
+.option-item.selected .star-btn:hover{opacity:.7;background:rgba(255,215,0,0.08)}
+.star-btn.starred{opacity:1!important}
+.star-btn svg{width:18px;height:18px;fill:none;stroke:var(--text-dim);stroke-width:2;transition:all .25s}
+.option-item.selected .star-btn svg{stroke:var(--star-gold)}
+.star-btn.starred svg{fill:var(--star-gold);stroke:var(--star-gold);filter:drop-shadow(0 0 6px var(--star-glow))}
+.tooltip-trigger{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(57,255,20,0.1);color:var(--neon);font-size:10px;font-weight:700;cursor:help;margin-left:4px;position:relative;flex-shrink:0;vertical-align:middle}
+.tooltip-content{display:none;position:fixed;background:#1e261e;border:1px solid var(--border-selected);border-radius:6px;padding:10px 14px;font-size:11px;line-height:1.6;color:var(--text-secondary);max-width:280px;width:max-content;z-index:500;white-space:normal;font-weight:400;pointer-events:none}
+.tooltip-trigger:hover .tooltip-content{display:block}
+.nav-buttons{display:flex;justify-content:flex-end;gap:12px;margin-top:28px}
+.btn-prev,.btn-next{padding:12px 32px;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .25s;border-radius:2px}
+.btn-prev{background:transparent;border:1px solid var(--text-dim);color:var(--text-secondary)}
+.btn-prev:hover{border-color:var(--text-secondary);color:var(--text-primary)}
+.btn-next{background:var(--neon);border:1px solid var(--neon);color:#0a0e0a;font-weight:700}
+.btn-next:hover{background:var(--neon-dim);box-shadow:0 0 20px var(--neon-glow-strong)}
+.options-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.options-grid .option-item{flex-direction:column;align-items:center;text-align:center;padding:16px 10px 12px;gap:6px;min-height:80px;justify-content:center}
+.options-grid .option-item .check-box{position:absolute;top:8px;left:8px;width:16px;height:16px}
+.options-grid .option-item .check-box svg{width:10px;height:10px}
+.options-grid .option-item .star-btn{position:absolute;top:6px;right:6px;width:24px;height:24px}
+.options-grid .option-item .star-btn svg{width:14px;height:14px}
+.options-grid .option-text{font-size:12px;text-align:center;line-height:1.35}
+.options-grid .option-item .device-emoji{font-size:22px;line-height:1}
+.options-grid .option-item .platform-logo{width:28px;height:28px;opacity:.7}
+.options-grid .option-item.selected .platform-logo{opacity:1}
+.step-dots{display:flex;gap:6px;align-items:center;margin-bottom:24px}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--text-dim);transition:all .3s;cursor:pointer}
+.step-dot.active{background:var(--neon);box-shadow:0 0 8px var(--neon-glow-strong);width:24px;border-radius:4px}
+.step-dot.completed{background:var(--neon-dim)}
+.completion-screen{display:none;text-align:center;padding:120px 32px;animation:fadeSlideIn .5s ease-out}
+.completion-screen.active{display:block}
+.completion-screen .big-check{width:80px;height:80px;border:3px solid var(--neon);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:24px;box-shadow:0 0 40px var(--neon-glow)}
+.completion-screen .big-check svg{width:36px;height:36px;stroke:var(--neon);fill:none;stroke-width:3}
+.completion-screen h2{font-family:'Orbitron',sans-serif;font-size:28px;color:var(--neon);margin-bottom:12px}
+.completion-screen p{color:var(--text-secondary);font-size:14px;margin-bottom:28px}
+.btn-main{display:inline-block;padding:14px 40px;background:var(--neon);border:none;color:#0a0e0a;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all .25s}
+.btn-main:hover{background:var(--neon-dim);box-shadow:0 0 20px var(--neon-glow-strong)}
+.alert-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:300;justify-content:center;align-items:center}
+.alert-overlay.open{display:flex}
+.alert-box{background:#151a15;border:1px solid var(--border-selected);border-radius:8px;padding:28px 32px;max-width:420px;width:90%;text-align:center}
+.alert-box p{font-size:14px;line-height:1.7;color:var(--text-primary);margin-bottom:12px}
+.alert-box .alert-sub{font-size:12px;color:var(--text-secondary);margin-bottom:20px}
+.alert-box button{padding:10px 28px;background:var(--neon);border:none;color:#0a0e0a;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border-radius:2px;margin:0 6px}
+.alert-box .btn-cancel{background:transparent;border:1px solid var(--text-dim);color:var(--text-secondary)}
+.dev-badge{position:fixed;bottom:20px;left:20px;background:rgba(57,255,20,0.08);border:1px solid rgba(57,255,20,0.2);border-radius:6px;padding:10px 16px;font-family:'Rajdhani',sans-serif;font-size:11px;color:var(--neon);letter-spacing:1px;text-transform:uppercase;z-index:100;cursor:pointer}
+.dev-badge .dot{display:inline-block;width:6px;height:6px;background:var(--neon);border-radius:50%;margin-right:8px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.dev-panel{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);z-index:200;justify-content:center;align-items:center}
+.dev-panel.open{display:flex}
+.dev-panel-inner{background:#111611;border:1px solid var(--border-selected);border-radius:8px;padding:32px;max-width:640px;width:90%;max-height:80vh;overflow-y:auto;font-size:13px;line-height:1.8;color:var(--text-secondary)}
+.dev-panel-inner h3{font-family:'Orbitron',sans-serif;font-size:14px;color:var(--neon);margin-bottom:16px;letter-spacing:2px}
+.dev-panel-inner code{background:rgba(57,255,20,0.06);padding:2px 6px;border-radius:3px;font-size:12px;color:var(--neon)}
+.dev-panel-inner .close-panel{float:right;background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer}
+.dev-panel-inner table{width:100%;border-collapse:collapse;margin:12px 0}
+.dev-panel-inner th,.dev-panel-inner td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--border-subtle);font-size:12px}
+.dev-panel-inner th{color:var(--neon);font-weight:600}
+@media(max-width:768px){.question-section.active{grid-template-columns:1fr;gap:24px;padding-top:20px}.left-panel{position:static}.survey-wrapper{padding:70px 16px 40px}.topbar{padding:0 16px}.options-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="topbar"><div class="topbar-logo">KRAFTON ID</div><div><span class="lang-switch">English ⊕</span></div></div>
+<div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="alert-overlay" id="skipAlert"><div class="alert-box"><p>게이머 정보 입력이 완료되지 않았습니다.</p><p class="alert-sub">원활한 혜택 제공을 위해 다음에 꼭 완성해 주세요.</p><button onclick="confirmSkip()">메인으로 이동</button><button class="btn-cancel" onclick="closeAlert('skipAlert')">계속 입력하기</button></div></div>
+<div class="alert-overlay" id="starAlert"><div class="alert-box"><p>★도 체크 부탁드립니다</p><p class="alert-sub">선택한 항목 중 가장 중요한 1개에 ★을 눌러주세요.</p><button onclick="closeAlert('starAlert')">확인</button></div></div>
+
+<div class="survey-wrapper" id="surveyWrapper">
+
+<!-- Q1 -->
+<div class="question-section" data-q="1">
+  <div class="left-panel"><div class="decorative-slashes">/ / / / / / / / / /</div><h1 class="section-title">COMPLETE YOUR PROFILE</h1><p class="section-desc">더 깊은 몰입과 즐거운 플레이를 위해 당신의 취향을 알려 주세요.<br>{K-tag}님의 정보를 바탕으로 새롭고 재미있는 게임과 기능을 가장 먼저 연결해 드립니다!</p></div>
+  <div class="right-panel">
+    <div class="step-dots"></div><div class="q-number">Q.1/11</div>
+    <div class="q-text">주로 어떤 기기로 게임을 즐기시나요?</div>
+    <div class="q-subtitle">해당 항목 모두 선택 · <span class="star-hint">가장 많이 사용하는 기기 ★표시</span></div>
+    <div class="interaction-hint"><span class="hint-icon">💡</span><span>여러 개를 선택하셨나요? 그중 가장 핵심적인 항목 하나 우측의 ★을 눌러주세요</span></div>
+    <div class="options-list options-grid" data-type="multi-star" data-qid="q1">
+      <div class="option-item" data-value="mobile_high"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="device-emoji">📱</span><span class="option-text">모바일/태블릿<span class="sub">(고사양)</span> <span class="tooltip-trigger">?<span class="tooltip-content">최신 게임을 최고 옵션으로 끊김 없이 플레이 가능</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="mobile_mid"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="device-emoji">📱</span><span class="option-text">모바일/태블릿<span class="sub">(일반)</span> <span class="tooltip-trigger">?<span class="tooltip-content">표준 옵션으로 대부분의 게임을 원활하게 플레이 가능</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="mobile_low"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="device-emoji">📱</span><span class="option-text">모바일/태블릿<span class="sub">(저사양)</span> <span class="tooltip-trigger">?<span class="tooltip-content">설정을 낮춰야 게임 플레이 가능. 주로 웹 서핑이나 메신저 용도</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="pc_high"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="device-emoji">💻</span><span class="option-text">PC<span class="sub">(고사양/게이밍)</span> <span class="tooltip-trigger">?<span class="tooltip-content">최신 게임을 최고 옵션으로 끊김 없이 플레이 가능</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="pc_mid"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="device-emoji">💻</span><span class="option-text">PC<span class="sub">(일반)</span> <span class="tooltip-trigger">?<span class="tooltip-content">표준 옵션으로 대부분의 게임을 원활하게 플레이 가능</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="pc_low"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="device-emoji">💻</span><span class="option-text">PC<span class="sub">(저사양)</span> <span class="tooltip-trigger">?<span class="tooltip-content">설정을 낮춰야 게임 플레이 가능. 주로 웹 서핑이나 문서 작업 용도</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="ps"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="device-emoji">🎮</span><span class="option-text">PlayStation<span class="sub">시리즈</span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="xbox"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="device-emoji">🎮</span><span class="option-text">Xbox<span class="sub">시리즈</span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="switch"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="device-emoji">🎮</span><span class="option-text">Nintendo Switch<span class="sub">시리즈</span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="cloud"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="device-emoji">☁️</span><span class="option-text">클라우드 게이밍 <span class="tooltip-trigger">?<span class="tooltip-content">GeForce NOW, Xbox Cloud Gaming과 같이 스트리밍 서비스를 통해 서버에서 게임을 실행하고, 화면만 인터넷으로 받아서 플레이하는 방식의 서비스를 주로 이용하시는 경우에 해당합니다</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+    </div>
+    <div class="nav-buttons"><button class="btn-next" onclick="goNext()">NEXT →</button></div>
+  </div>
+</div>
+
+<!-- Q2 -->
+<div class="question-section" data-q="2">
+  <div class="left-panel"><div class="decorative-slashes">/ / / / / / / / / /</div><h1 class="section-title">WHAT DRIVES<br>YOUR PLAY?</h1><p class="section-desc">게임에서 가장 재미를 느끼는 순간을 알려주세요.</p></div>
+  <div class="right-panel">
+    <div class="step-dots"></div><div class="q-number">Q.2/11</div>
+    <div class="q-text">게임을 할 때 가장 재미를 느끼는 부분은?</div>
+    <div class="q-subtitle">해당 항목 모두 선택 · <span class="star-hint">가장 중요한 부분 ★표시</span></div>
+    <div class="interaction-hint"><span class="hint-icon">💡</span><span>여러 개를 선택하셨나요? 그중 가장 핵심적인 항목 하나 우측의 ★을 눌러주세요</span></div>
+    <div class="options-list" data-type="multi-star" data-qid="q2">
+      <div class="option-item" data-value="achievement"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">📈 성취/성장 <span class="sub">목표 달성, 보상, 캐릭터 성장</span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="competition"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">🥇 경쟁/승부 <span class="sub">순위, 기록, 타인과의 대결</span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="story"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">📖 몰입/스토리 <span class="sub">세계관, 캐릭터, 분위기, 서사 경험</span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="explore"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">🧭 자유도/탐험 <span class="sub">월드 탐험, 자유로운 선택, 나만의 플레이</span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="create"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">🛠 창작/제작 <span class="sub">건설, 커스텀, 빌드, 실험, 모드 제작</span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="social"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">🤝 소셜/관계 <span class="sub">타인과의 협동, 교류, 함께 플레이하는 경험</span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="chill"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">😌 힐링/휴식 <span class="sub">스트레스 해소, 가볍게 즐기며 기분 전환</span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+    </div>
+    <div class="nav-buttons"><button class="btn-prev" onclick="goPrev()">← PREV</button><button class="btn-next" onclick="goNext()">NEXT →</button></div>
+  </div>
+</div>
+
+<!-- Q3 -->
+<div class="question-section" data-q="3">
+  <div class="left-panel"><div class="decorative-slashes">/ / / / / / / / / /</div><h1 class="section-title">YOUR<br>GENRE.</h1><p class="section-desc">좋아하는 장르를 알려주시면, 딱 맞는 게임을 추천해 드릴 수 있어요.</p></div>
+  <div class="right-panel">
+    <div class="step-dots"></div><div class="q-number">Q.3/11</div>
+    <div class="q-text">가장 좋아하는 게임 장르는 무엇인가요?</div>
+    <div class="q-subtitle">해당 항목 모두 선택 · <span class="star-hint">가장 좋아하는 장르 ★표시</span></div>
+    <div class="interaction-hint"><span class="hint-icon">💡</span><span>여러 개를 선택하셨나요? 그중 가장 핵심적인 항목 하나 우측의 ★을 눌러주세요</span></div>
+    <div class="options-list" data-type="multi-star" data-qid="q3">
+      <div class="option-item" data-value="shooting"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">슈팅/배틀로얄/익스트랙션 <span class="tooltip-trigger">?<span class="tooltip-content">예시: PUBG: 배틀그라운드, 콜 오브 듀티, 발로란트, 타르코프</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="action"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">액션/액션 RPG/소울라이크/로그라이크/핵앤슬래시 <span class="tooltip-trigger">?<span class="tooltip-content">예시: 하이파이 러시, 디아블로, 엘든 링, 철권, 하데스</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="rpg"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">정통 RPG/MMORPG <span class="tooltip-trigger">?<span class="tooltip-content">예시: 테라, 월드 오브 워크래프트, 리니지, 파이널 판타지</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="strategy"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">전략/MOBA/카드/보드/덱빌딩 <span class="tooltip-trigger">?<span class="tooltip-content">예시: 로드 투 발러, 리그 오브 레전드, 하스스톤, 클래시 로얄, 문명</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="sim"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">시뮬레이션/인생·생활/샌드박스 <span class="tooltip-trigger">?<span class="tooltip-content">예시: 인조이, 딩컴, 심즈, 동물의 숲, 마인크래프트, 로블록스</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="survival"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">서바이벌/어드벤처/오픈 월드/호러 <span class="tooltip-trigger">?<span class="tooltip-content">예시: 서브노티카, 팰월드, 미메시스, 젤다의 전설, 원신, GTA, 데드 바이 데이라이트</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="puzzle"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">추리/퍼즐/인터랙티브 스토리 <span class="tooltip-trigger">?<span class="tooltip-content">예시: 언커버 더 스모킹 건, 디트로이트: 비컴 휴먼, 역전재판</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="casual"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">스포츠/캐주얼/매치/방치형 <span class="tooltip-trigger">?<span class="tooltip-content">예시: 골프킹, FC(피파), 캔디크러쉬사가, 브롤스타즈, 쿠키런, 버섯커 키우기</span></span></span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="genre_etc"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">그 외</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+    </div>
+    <div class="nav-buttons"><button class="btn-prev" onclick="goPrev()">← PREV</button><button class="btn-next" onclick="goNext()">NEXT →</button></div>
+  </div>
+</div>
+
+<!-- Q4 -->
+<div class="question-section" data-q="4">
+  <div class="left-panel"><div class="decorative-slashes">/ / / / / / / / / /</div><h1 class="section-title">ABOUT<br>YOU.</h1><p class="section-desc">몇 가지 기본 정보를 알려주시면 더 나은 경험을 제공해 드릴 수 있어요.</p><button class="skip-btn" onclick="showSkipAlert()">프로필 완성을 포기하고 메인 화면으로 이동하기</button></div>
+  <div class="right-panel">
+    <div class="step-dots"></div><div class="q-number">Q.4/11</div><div class="q-text">성별을 선택해 주세요</div><div class="q-subtitle">1개 선택</div>
+    <div class="options-list" data-type="single" data-qid="q4">
+      <div class="option-item" data-value="male"><div class="radio-circle"></div><span class="option-text">남성</span></div>
+      <div class="option-item" data-value="female"><div class="radio-circle"></div><span class="option-text">여성</span></div>
+      <div class="option-item" data-value="nonbinary"><div class="radio-circle"></div><span class="option-text">논바이너리</span></div>
+      <div class="option-item" data-value="noans"><div class="radio-circle"></div><span class="option-text">응답하지 않음</span></div>
+    </div>
+    <div class="nav-buttons"><button class="btn-prev" onclick="goPrev()">← PREV</button><button class="btn-next" onclick="goNext()">NEXT →</button></div>
+  </div>
+</div>
+
+<!-- Q5 -->
+<div class="question-section" data-q="5">
+  <div class="left-panel"><div class="decorative-slashes">/ / / / / / / / / /</div><h1 class="section-title">YOUR<br>PLAY TIME.</h1><p class="section-desc">일주일에 게임을 얼마나 플레이하시나요?</p><button class="skip-btn" onclick="showSkipAlert()">프로필 완성을 포기하고 메인 화면으로 이동하기</button></div>
+  <div class="right-panel">
+    <div class="step-dots"></div><div class="q-number">Q.5/11</div><div class="q-text">평소 일주일에 게임을 얼마나 하시나요?</div><div class="q-subtitle">1개 선택</div>
+    <div class="options-list" data-type="single" data-qid="q5">
+      <div class="option-item" data-value="0-5"><div class="radio-circle"></div><span class="option-text">0–5시간 미만 <span class="sub">가끔 가볍게 즐겨요</span></span></div>
+      <div class="option-item" data-value="5-10"><div class="radio-circle"></div><span class="option-text">5시간 이상–10시간 미만 <span class="sub">틈틈이 즐기는 편이에요</span></span></div>
+      <div class="option-item" data-value="10-20"><div class="radio-circle"></div><span class="option-text">10시간 이상–20시간 미만 <span class="sub">꾸준히 자주 플레이해요</span></span></div>
+      <div class="option-item" data-value="20-30"><div class="radio-circle"></div><span class="option-text">20시간 이상–30시간 미만 <span class="sub">대부분의 여가 시간을 게임에 써요</span></span></div>
+      <div class="option-item" data-value="30+"><div class="radio-circle"></div><span class="option-text">30시간 이상 <span class="sub">자타공인 열정적인 게이머!</span></span></div>
+    </div>
+    <div class="nav-buttons"><button class="btn-prev" onclick="goPrev()">← PREV</button><button class="btn-next" onclick="goNext()">NEXT →</button></div>
+  </div>
+</div>
+
+<!-- Q6 -->
+<div class="question-section" data-q="6">
+  <div class="left-panel"><div class="decorative-slashes">/ / / / / / / / / /</div><h1 class="section-title">YOUR<br>SPENDING.</h1><p class="section-desc">게임에 투자하는 금액을 알려주세요.</p><button class="skip-btn" onclick="showSkipAlert()">프로필 완성을 포기하고 메인 화면으로 이동하기</button></div>
+  <div class="right-panel">
+    <div class="step-dots"></div><div class="q-number">Q.6/11</div><div class="q-text">한 달 평균 게임에 지출하는 금액은? <span class="tooltip-trigger">?<span class="tooltip-content">정확한 계산이 어렵다면, 대략적인 월 기준 금액으로 선택해 주세요(인앱결제/패키지 구매/구독·패스 포함)<br>예시) 연간 12만 원 사용할 경우, 월 1만 원으로 선택해 주세요</span></span></div><div class="q-subtitle">1개 선택</div>
+    <div class="options-list" data-type="single" data-qid="q6">
+      <div class="option-item" data-value="0"><div class="radio-circle"></div><span class="option-text">없음 <span class="sub">무과금으로 즐겨요</span></span></div>
+      <div class="option-item" data-value="~1만"><div class="radio-circle"></div><span class="option-text">1만 원 미만 <span class="sub">가끔 소액 결제해요</span></span></div>
+      <div class="option-item" data-value="1~5만"><div class="radio-circle"></div><span class="option-text">1만 원 이상–5만 원 미만 <span class="sub">필요한 건 구매하는 편이에요</span></span></div>
+      <div class="option-item" data-value="5~10만"><div class="radio-circle"></div><span class="option-text">5만 원 이상–10만 원 미만 <span class="sub">즐거움을 위해 기꺼이 투자해요</span></span></div>
+      <div class="option-item" data-value="10~30만"><div class="radio-circle"></div><span class="option-text">10만 원 이상–30만 원 미만 <span class="sub">좋아하는 게임에 진심이에요</span></span></div>
+      <div class="option-item" data-value="30만+"><div class="radio-circle"></div><span class="option-text">30만 원 이상 <span class="sub">게임을 적극적으로 지원해요</span></span></div>
+    </div>
+    <div class="nav-buttons"><button class="btn-prev" onclick="goPrev()">← PREV</button><button class="btn-next" onclick="goNext()">NEXT →</button></div>
+  </div>
+</div>
+
+<!-- Q7 -->
+<div class="question-section" data-q="7">
+  <div class="left-panel"><div class="decorative-slashes">/ / / / / / / / / /</div><h1 class="section-title">YOUR<br>VIEW.</h1><p class="section-desc">게임에서 선호하는 카메라 시점을 선택해 주세요.</p><button class="skip-btn" onclick="showSkipAlert()">프로필 완성을 포기하고 메인 화면으로 이동하기</button></div>
+  <div class="right-panel">
+    <div class="step-dots"></div><div class="q-number">Q.7/11</div><div class="q-text">가장 선호하는 게임 시점은?</div><div class="q-subtitle">최대 2개 선택</div>
+    <div class="options-list" data-type="multi-max2" data-qid="q7">
+      <div class="option-item" data-value="1p"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">1인칭</span></div>
+      <div class="option-item" data-value="3p"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">3인칭/숄더뷰</span></div>
+      <div class="option-item" data-value="topdown"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">탑뷰/쿼터뷰</span></div>
+      <div class="option-item" data-value="side"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">사이드뷰</span></div>
+      <div class="option-item" data-value="nopref"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">특정 선호 없음</span></div>
+    </div>
+    <div class="nav-buttons"><button class="btn-prev" onclick="goPrev()">← PREV</button><button class="btn-next" onclick="goNext()">NEXT →</button></div>
+  </div>
+</div>
+
+<!-- Q8 -->
+<div class="question-section" data-q="8">
+  <div class="left-panel"><div class="decorative-slashes">/ / / / / / / / / /</div><h1 class="section-title">ART<br>STYLE.</h1><p class="section-desc">좋아하는 게임 아트 스타일을 모두 골라주세요.</p><button class="skip-btn" onclick="showSkipAlert()">프로필 완성을 포기하고 메인 화면으로 이동하기</button></div>
+  <div class="right-panel">
+    <div class="step-dots"></div><div class="q-number">Q.8/11</div><div class="q-text">선호하는 게임 아트 스타일은?</div><div class="q-subtitle">해당 항목 모두 선택</div>
+    <div class="options-list" data-type="multi-exclusive" data-qid="q8">
+      <div class="option-item" data-value="realistic"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">실사형(Realistic) <span class="tooltip-trigger">?<span class="tooltip-content">예시: PUBG: 배틀그라운드, 인조이, 디아블로</span></span> <span class="sub">현실적인 3D 그래픽 또는 정교한 일러스트 스타일</span></span></div>
+      <div class="option-item" data-value="cartoon"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">카툰형(Cartoon) <span class="tooltip-trigger">?<span class="tooltip-content">예시: 리그 오브 레전드, 동물의 숲, 어몽어스</span></span> <span class="sub">글로벌 대중적인 만화풍 또는 단순화한 그림체</span></span></div>
+      <div class="option-item" data-value="manga"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">망가형(Manga) <span class="tooltip-trigger">?<span class="tooltip-content">예시: 원신, 드래곤볼, 메이플스토리, 소울워커</span></span> <span class="sub">일본 애니메이션 감성의 캐릭터 강조 그림체</span></span></div>
+      <div class="option-item" data-value="pixel"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">픽셀/복셀형(Pixel/Voxel) <span class="tooltip-trigger">?<span class="tooltip-content">예시: 마인크래프트, 스타듀 밸리</span></span> <span class="sub">도트 감성 또는 각진 블록 형태의 스타일</span></span></div>
+      <div class="option-item" data-value="nopref"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">특정 선호 없음</span></div>
+    </div>
+    <div class="nav-buttons"><button class="btn-prev" onclick="goPrev()">← PREV</button><button class="btn-next" onclick="goNext()">NEXT →</button></div>
+  </div>
+</div>
+
+<!-- Q9 -->
+<div class="question-section" data-q="9">
+  <div class="left-panel"><div class="decorative-slashes">/ / / / / / / / / /</div><h1 class="section-title">YOUR<br>CHANNELS.</h1><p class="section-desc">게임 정보를 얻거나 커뮤니티 활동을 하는 채널을 알려주세요.</p><button class="skip-btn" onclick="showSkipAlert()">프로필 완성을 포기하고 메인 화면으로 이동하기</button></div>
+  <div class="right-panel">
+    <div class="step-dots"></div><div class="q-number">Q.9/11</div>
+    <div class="q-text">게임 정보 습득 및 커뮤니티 활동을 위해 자주 이용하는 채널은 무엇인가요?</div>
+    <div class="q-subtitle">해당 항목 모두 선택 · <span class="star-hint">가장 많이 이용하는 채널 ★표시</span></div>
+    <div class="interaction-hint"><span class="hint-icon">💡</span><span>여러 개를 선택하셨나요? 그중 가장 핵심적인 항목 하나 우측의 ★을 눌러주세요</span></div>
+    <div class="options-list options-grid" data-type="multi-star" data-qid="q9">
+      <div class="option-item" data-value="youtube"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><img class="platform-logo" src="https://cdn.simpleicons.org/youtube/FF0000" alt=""><span class="option-text">YouTube</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="discord"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><img class="platform-logo" src="https://cdn.simpleicons.org/discord/5865F2" alt=""><span class="option-text">Discord</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="twitch"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><img class="platform-logo" src="https://cdn.simpleicons.org/twitch/9146FF" alt=""><span class="option-text">Twitch</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="reddit"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><img class="platform-logo" src="https://cdn.simpleicons.org/reddit/FF4500" alt=""><span class="option-text">Reddit</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="instagram"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><img class="platform-logo" src="https://cdn.simpleicons.org/instagram/E4405F" alt=""><span class="option-text">Instagram</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="x"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><img class="platform-logo" src="https://cdn.simpleicons.org/x/FFFFFF" alt=""><span class="option-text">X</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="tiktok"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><img class="platform-logo" src="https://cdn.simpleicons.org/tiktok/FFFFFF" alt=""><span class="option-text">TikTok</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="facebook"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><img class="platform-logo" src="https://cdn.simpleicons.org/facebook/1877F2" alt=""><span class="option-text">Facebook</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="threads"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><img class="platform-logo" src="https://cdn.simpleicons.org/threads/FFFFFF" alt=""><span class="option-text">Threads</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="steam"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><img class="platform-logo" src="https://cdn.simpleicons.org/steam/FFFFFF" alt=""><span class="option-text">Steam 커뮤니티</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="epic"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><img class="platform-logo" src="https://cdn.simpleicons.org/epicgames/FFFFFF" alt=""><span class="option-text">Epic Games 커뮤니티</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="psn"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><img class="platform-logo" src="https://cdn.simpleicons.org/playstation/003791" alt=""><span class="option-text">PlayStation 커뮤니티</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="xboxcom"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="device-emoji" style="font-size:20px;color:#107C10">𝗫</span><span class="option-text">Xbox 커뮤니티</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="local"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="device-emoji">🌐</span><span class="option-text">지역 게임 커뮤니티</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+      <div class="option-item" data-value="ch_etc"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="device-emoji">➕</span><span class="option-text">그 외</span><div class="star-btn"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div></div>
+    </div>
+    <div class="nav-buttons"><button class="btn-prev" onclick="goPrev()">← PREV</button><button class="btn-next" onclick="goNext()">NEXT →</button></div>
+  </div>
+</div>
+
+<!-- Q10 -->
+<div class="question-section" data-q="10">
+  <div class="left-panel"><div class="decorative-slashes">/ / / / / / / / / /</div><h1 class="section-title">PLAY<br>STYLE.</h1><p class="section-desc">솔로? 팀? PvP? PvE? 가장 선호하는 게임 스타일을 알려주세요.</p><button class="skip-btn" onclick="showSkipAlert()">프로필 완성을 포기하고 메인 화면으로 이동하기</button></div>
+  <div class="right-panel">
+    <div class="step-dots"></div><div class="q-number">Q.10/11</div>
+    <div class="q-text">가장 선호하는 게임 스타일은? <span class="tooltip-trigger">?<span class="tooltip-content">PvP(Player vs Player): 실제 다른 플레이어(사람)와 실력을 겨루거나 순위 경쟁을 하는 모드<br><br>PvE(Player vs Environment): 컴퓨터가 조종하는 적(AI)이나 몬스터를 상대로 전투하고, 주어진 미션이나 스토리를 해결하는 모드</span></span></div><div class="q-subtitle">최대 2개 선택</div>
+    <div class="options-list" data-type="multi-max2" data-qid="q10">
+      <div class="option-item" data-value="solo_pve"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">혼자서 몰입하는 PvE <span class="sub">싱글 캠페인, 스토리 모드 등</span></span></div>
+      <div class="option-item" data-value="solo_pvp"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">실력을 증명하는 솔로 랭크 PvP <span class="sub">1:1 대전, 개인 랭킹전 등</span></span></div>
+      <div class="option-item" data-value="coop_pve"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">동료와 힘을 합치는 협동 PvE <span class="sub">보스 레이드, 파티 던전 등</span></span></div>
+      <div class="option-item" data-value="team_pvp"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">팀워크로 승리하는 멀티 PvP <span class="sub">5:5 팀전, 배틀로얄 스쿼드 등</span></span></div>
+      <div class="option-item" data-value="nopref"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">특정 선호 없음</span></div>
+    </div>
+    <div class="nav-buttons"><button class="btn-prev" onclick="goPrev()">← PREV</button><button class="btn-next" onclick="goNext()">NEXT →</button></div>
+  </div>
+</div>
+
+<!-- Q11 -->
+<div class="question-section" data-q="11">
+  <div class="left-panel"><div class="decorative-slashes">/ / / / / / / / / /</div><h1 class="section-title">BEYOND<br>THE GAME.</h1><p class="section-desc">게임 밖에서 즐기는 활동을 알려주세요.</p><button class="skip-btn" onclick="showSkipAlert()">프로필 완성을 포기하고 메인 화면으로 이동하기</button></div>
+  <div class="right-panel">
+    <div class="step-dots"></div><div class="q-number">Q.11/11</div><div class="q-text">게임 밖에서 어떤 활동을 즐기시나요?</div><div class="q-subtitle">해당 항목 모두 선택</div>
+    <div class="options-list" data-type="multi" data-qid="q11">
+      <div class="option-item" data-value="stream"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">내 플레이나 공략/후기 등을 방송하거나 영상으로 기록해 업로드해요</span></div>
+      <div class="option-item" data-value="community"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">게임 관련 모임, 커뮤니티를 운영하거나 주도적으로 활동해요</span></div>
+      <div class="option-item" data-value="mod"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">사용자 제작 모드(Mod)나 커스텀 아이템을 직접 제작해요</span></div>
+      <div class="option-item" data-value="write"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">공략, 후기 등을 글로 정리해 공유해요</span></div>
+      <div class="option-item" data-value="goods"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">게임 관련 굿즈 수집/오프라인 게임 행사 참여</span></div>
+      <div class="option-item" data-value="watch"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="#0a0e0a" stroke-width="2"/></svg></div><span class="option-text">직접 활동하는 것보다 다른 유저의 콘텐츠를 감상해요</span></div>
+    </div>
+    <div class="nav-buttons"><button class="btn-prev" onclick="goPrev()">← PREV</button><button class="btn-next" onclick="submitSurvey()">SUBMIT ✓</button></div>
+  </div>
+</div>
+
+<div class="completion-screen" id="completionScreen">
+  <div class="big-check"><svg viewBox="0 0 24 24"><polyline points="4,12 10,18 20,6"/></svg></div>
+  <h2>PROFILE COMPLETE!</h2>
+  <p>게이머 정보 입력이 완료되었습니다.</p>
+  <button class="btn-main" onclick="alert('메인 화면으로 이동합니다.')">메인으로 가기</button>
+</div>
+</div>
+
+<div class="dev-badge" onclick="toggleDevPanel()"><span class="dot"></span>DEV REFERENCE</div>
+<div class="dev-panel" id="devPanel"><div class="dev-panel-inner"><button class="close-panel" onclick="toggleDevPanel()">✕</button><h3>INTERACTION SPEC</h3><p style="margin-bottom:16px;">개발자 레퍼런스용 페이지입니다.</p><table><tr><th>유형</th><th>인터랙션</th><th>문항</th></tr><tr><td><code>multi-star</code></td><td>복수선택 + ★ 1개 (1개 선택 시 자동부여)</td><td>Q1,Q2,Q3,Q9</td></tr><tr><td><code>single</code></td><td>단일선택(라디오)</td><td>Q4,Q5,Q6</td></tr><tr><td><code>multi-max2</code></td><td>최대 2개, "특정 선호 없음" 배타</td><td>Q7,Q10</td></tr><tr><td><code>multi-exclusive</code></td><td>복수선택, "특정 선호 없음" 배타</td><td>Q8</td></tr><tr><td><code>multi</code></td><td>복수선택 무제한</td><td>Q11</td></tr></table></div></div>
+
+<script>
+const totalQuestions=11;let currentQ=1;const starRequiredQs=[1,2,3,9];
+function init(){renderStepDots();showQuestion(1);bindOptionClicks()}
+function renderStepDots(){document.querySelectorAll('.step-dots').forEach(c=>{c.innerHTML='';for(let i=1;i<=totalQuestions;i++){const d=document.createElement('div');d.className='step-dot'+(i===currentQ?' active':'')+(i<currentQ?' completed':'');d.onclick=()=>showQuestion(i);c.appendChild(d)}})}
+function updateProgress(){document.getElementById('progressBar').style.width=((currentQ-1)/totalQuestions*100)+'%'}
+function showQuestion(n){document.querySelectorAll('.question-section').forEach(s=>s.classList.remove('active'));const t=document.querySelector(`.question-section[data-q="${n}"]`);if(t){t.classList.add('active');t.style.animation='none';t.offsetHeight;t.style.animation=''}currentQ=n;renderStepDots();updateProgress();window.scrollTo({top:0,behavior:'smooth'})}
+function validateAnswer(){const s=document.querySelector(`.question-section[data-q="${currentQ}"]`);const l=s.querySelector('.options-list');if(!l)return true;return l.querySelectorAll('.option-item.selected').length>0}
+function validateStar(){if(!starRequiredQs.includes(currentQ))return true;const s=document.querySelector(`.question-section[data-q="${currentQ}"]`);const l=s.querySelector('.options-list[data-type="multi-star"]');if(!l)return true;const sel=l.querySelectorAll('.option-item.selected');if(sel.length===0)return true;if(!l.querySelector('.star-btn.starred')){if(sel.length===1){const sb=sel[0].querySelector('.star-btn');if(sb){l.querySelectorAll('.star-btn').forEach(s=>s.classList.remove('starred'));sb.classList.add('starred')}return true}document.getElementById('starAlert').classList.add('open');return false}return true}
+function goNext(){if(!validateAnswer()){const s=document.querySelector(`.question-section[data-q="${currentQ}"]`);const b=s.querySelector('.btn-next');b.style.outline='2px solid #ff4444';b.style.outlineOffset='2px';setTimeout(()=>{b.style.outline='';b.style.outlineOffset=''},1500);return}if(!validateStar())return;if(currentQ<totalQuestions)showQuestion(currentQ+1)}
+function goPrev(){if(currentQ>1)showQuestion(currentQ-1)}
+function showSkipAlert(){document.getElementById('skipAlert').classList.add('open')}
+function closeAlert(id){document.getElementById(id).classList.remove('open')}
+function confirmSkip(){closeAlert('skipAlert');doComplete(true)}
+function submitSurvey(){if(!validateAnswer())return;if(!validateStar())return;doComplete(false)}
+function doComplete(skipped){const a=collectAnswers();a.skipped=skipped;a.skippedAt=skipped?currentQ:null;a.timestamp=new Date().toISOString();sendToSheet(a);document.querySelectorAll('.question-section').forEach(s=>s.classList.remove('active'));document.getElementById('completionScreen').classList.add('active');document.getElementById('progressBar').style.width='100%'}
+function collectAnswers(){const d={};document.querySelectorAll('.options-list').forEach(l=>{const q=l.dataset.qid,t=l.dataset.type;const s=[...l.querySelectorAll('.option-item.selected')].map(i=>i.dataset.value);d[q]={selected:s};if(t==='multi-star'){const st=l.querySelector('.star-btn.starred');d[q].starred=st?st.closest('.option-item').dataset.value:null}});return d}
+const SHEET_URL='https://script.google.com/macros/s/AKfycbyflzTnJHAwR2W07_G7UdzvgIQsD1tQBdcTANoJKY14bp0EanrdXB9XWnQ1wfWZ59Hh/exec';
+function sendToSheet(d){if(!SHEET_URL){console.log('[DEV] Sheet URL 미설정. 로그:',JSON.stringify(d,null,2));return}fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).catch(e=>console.warn('Sheet 전송 실패:',e))}
+function toggleDevPanel(){document.getElementById('devPanel').classList.toggle('open')}
+document.getElementById('devPanel').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')});
+function bindOptionClicks(){document.querySelectorAll('.options-list').forEach(list=>{const type=list.dataset.type;list.querySelectorAll('.option-item').forEach(item=>{item.addEventListener('click',function(e){if(e.target.closest('.star-btn')||e.target.closest('.tooltip-trigger'))return;if(type==='single'){list.querySelectorAll('.option-item').forEach(i=>i.classList.remove('selected'));item.classList.add('selected')}else if(type==='multi-max2'){if(item.classList.contains('selected')){item.classList.remove('selected')}else{if(item.dataset.value==='nopref'){list.querySelectorAll('.option-item').forEach(i=>i.classList.remove('selected'));item.classList.add('selected')}else{list.querySelector('[data-value="nopref"]')?.classList.remove('selected');if(list.querySelectorAll('.option-item.selected').length<2)item.classList.add('selected')}}}else if(type==='multi-exclusive'){if(item.classList.contains('selected')){item.classList.remove('selected')}else{if(item.dataset.value==='nopref'){list.querySelectorAll('.option-item').forEach(i=>i.classList.remove('selected'));item.classList.add('selected')}else{list.querySelector('[data-value="nopref"]')?.classList.remove('selected');item.classList.add('selected')}}}else{if(item.classList.contains('selected')){item.classList.remove('selected');const s=item.querySelector('.star-btn');if(s)s.classList.remove('starred')}else{item.classList.add('selected')}}});const sb=item.querySelector('.star-btn');if(sb&&type==='multi-star'){sb.addEventListener('click',function(e){e.stopPropagation();if(!item.classList.contains('selected'))return;list.querySelectorAll('.star-btn').forEach(s=>s.classList.remove('starred'));sb.classList.add('starred')})}})})}
+document.addEventListener('mouseover',function(e){const trigger=e.target.closest('.tooltip-trigger');if(!trigger)return;const tip=trigger.querySelector('.tooltip-content');if(!tip)return;tip.style.display='block';const rect=trigger.getBoundingClientRect();const tipRect=tip.getBoundingClientRect();let top=rect.top-tipRect.height-8;let left=rect.left+rect.width/2-tipRect.width/2;if(top<8)top=rect.bottom+8;if(left<8)left=8;if(left+tipRect.width>window.innerWidth-8)left=window.innerWidth-tipRect.width-8;tip.style.top=top+'px';tip.style.left=left+'px';tip.style.display=''});
+init();
+</script>
+</body>
+</html>
